@@ -5,6 +5,7 @@ import { MapPin, LogOut, Package, Users, Plus } from 'lucide-react';
 import BookingsList from './BookingsList';
 import CustomersList from './CustomersList';
 import BookingForm from './BookingForm';
+import PackageUploader from './PackageUploader';
 
 const AdminDashboard = ({ user }) => {
   const [adminView, setAdminView] = useState('bookings');
@@ -141,12 +142,19 @@ const AdminDashboard = ({ user }) => {
 
         {/* Content */}
         {adminView === 'bookings' && (
-          <BookingsList 
-            bookings={allBookings}
-            onEdit={handleEditBooking}
-            onRefresh={loadAdminData}
-            loading={loading}
-          />
+          <>
+            {packages.length === 0 && (
+              <div className="mb-6">
+                <PackageUploader onComplete={loadAdminData} />
+              </div>
+            )}
+            <BookingsList 
+              bookings={allBookings}
+              onEdit={handleEditBooking}
+              onRefresh={loadAdminData}
+              loading={loading}
+            />
+          </>
         )}
 
         {adminView === 'customers' && (
