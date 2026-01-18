@@ -3,61 +3,19 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyACC9SHw4eqEciw9g4RPMRFNDYa39NMwzE",
-  authDomain: "paradise-app-c9d44.firebaseapp.com",
-  projectId: "paradise-app-c9d44",
-  storageBucket: "paradise-app-c9d44.firebasestorage.app",
-  messagingSenderId: "681898873988",
-  appId: "1:681898873988:web:d89ff0b9412484afa49ed1",
-  measurementId: "G-E17MK7BN9K"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Admin credentials
-export const ADMIN_EMAIL = 'thegrowthwavesads@gmail.com';
-export const ADMIN_PASSWORD = 'Paradise@Admin2026';import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyACC9SHw4eqEciw9g4RPMRFNDYa39NMwzE",
-  authDomain: "paradise-app-c9d44.firebaseapp.com",
-  projectId: "paradise-app-c9d44",
-  storageBucket: "paradise-app-c9d44.firebasestorage.app",
-  messagingSenderId: "681898873988",
-  appId: "1:681898873988:web:d89ff0b9412484afa49ed1",
-  measurementId: "G-E17MK7BN9K"
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-
-// Admin credentials
-export const ADMIN_EMAIL = 'admin@paradisetoursglb.in';
-export const ADMIN_PASSWORD = 'Paradise@Admin2024';import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyACC9SHw4eqEciw9g4RPMRFNDYa39NMwzE",
-  authDomain: "paradise-app-c9d44.firebaseapp.com",
-  projectId: "paradise-app-c9d44",
-  storageBucket: "paradise-app-c9d44.firebasestorage.app",
-  messagingSenderId: "681898873988",
-  appId: "1:681898873988:web:d89ff0b9412484afa49ed1",
-  measurementId: "G-E17MK7BN9K"
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-
-// Admin credentials
-export const ADMIN_EMAIL = 'admin@paradisetoursglb.in';
-export const ADMIN_PASSWORD = 'Paradise@Admin2024';
+// Admin credentials from environment variables
+export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
