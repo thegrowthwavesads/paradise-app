@@ -33,7 +33,7 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       // Check if email is verified (except for admin)
-      if (!userCredential.user.emailVerified && email !== 'admin@paradisetoursglb.in') {
+      if (!userCredential.user.emailVerified && email !== ADMIN_EMAIL) {
         setError('Please verify your email before logging in. Check your inbox.');
         await auth.signOut();
         setLoading(false);
