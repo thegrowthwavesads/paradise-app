@@ -119,13 +119,18 @@ const BookingDetails = ({ booking, onBack }) => {
             <h2 className="text-2xl font-light text-gray-800 mb-6">Day-by-Day Itinerary</h2>
             
             <div className="space-y-6">
-              {Object.entries(booking.itinerary || {}).map(([day, activities], idx) => (
+              {Object.entries(booking.itinerary || {})
+                .sort((a, b) => {
+                  const getDayNum = (key) => parseInt(key.replace(/\D/g, '')) || 0;
+                  return getDayNum(a[0]) - getDayNum(b[0]);
+                })
+                .map(([day, activities], idx, arr) => (
                 <div key={idx} className="flex space-x-4">
                   <div className="flex flex-col items-center">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{background: 'linear-gradient(to bottom right, #eb3030, #ff6b6b)'}}>
                       {day.replace('day', '').replace('_', '')}
                     </div>
-                    {idx < Object.keys(booking.itinerary).length - 1 && (
+                    {idx < arr.length - 1 && (
                       <div className="w-0.5 h-full bg-gray-200 mt-2"></div>
                     )}
                   </div>
