@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, User, Phone, Car, FileText, Clock, CheckCircle, Ticket, LogOut, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, MapPin, User, Phone, Car, FileText, Clock, CheckCircle, Ticket, LogOut, Loader2, Mail, Lock } from 'lucide-react';
 import { auth } from './firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState(null);
 
   // Dummy data
   const bookingData = {
@@ -53,21 +52,17 @@ const App = () => {
     { day: 7, title: 'Departure', activities: ['Breakfast', 'Check-out', 'Airport transfer', 'Flight to Delhi'] }
   ];
 
-  // Initialize reCAPTCHA on component mount
-  useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response) => {
-          console.log('reCAPTCHA solved');
-        }
-      });
-    }
-  }, []);
+  const validateEmail = (email) => {
+    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
 
-  const handleSendOTP = async () => {
-    if (phoneNumber.length !== 10) {
-      setError('Please enter a valid 10-digit phone number');
+  const handleLogin = async () => {
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
@@ -75,33 +70,23 @@ const App = () => {
     setError('');
 
     try {
-      const formattedPhone = `+91${phoneNumber}`;
-      
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'invisible',
-          'callback': (response) => {
-            console.log('reCAPTCHA solved');
-          }
-        });
-      }
-      
-      const appVerifier = window.recaptchaVerifier;
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(confirmation);
-      setShowOtpInput(true);
+      await signInWithEmailAndPassword(auth, email, password);
+      setIsLoggedIn(true);
       setLoading(false);
-
     } catch (err) {
       setLoading(false);
-      setError(err.message || 'Failed to send OTP. Please try again.');
-      console.error('Error sending OTP:', err);
+      setError('Invalid email or password');
+      console.error('Login error:', err);
     }
   };
 
-  const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
-      setError('Please enter a valid 6-digit OTP');
+  const handleSignUp = async () => {
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
@@ -109,22 +94,28 @@ const App = () => {
     setError('');
 
     try {
-      await confirmationResult.confirm(otp);
+      await createUserWithEmailAndPassword(auth, email, password);
       setIsLoggedIn(true);
       setLoading(false);
-
     } catch (err) {
       setLoading(false);
-      setError('Invalid OTP. Please try again.');
-      console.error('Error verifying OTP:', err);
+      setError('Failed to create account. Email may already exist.');
+      console.error('Signup error:', err);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (isSignUp) {
+      handleSignUp();
+    } else {
+      handleLogin();
     }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setPhoneNumber('');
-    setOtp('');
-    setShowOtpInput(false);
+    setEmail('');
+    setPassword('');
     setError('');
   };
 
@@ -137,133 +128,93 @@ const App = () => {
               <MapPin className="text-white" size={32} />
             </div>
             <h1 className="text-3xl font-light text-gray-800 mb-2">Paradise Tours</h1>
-            <p className="text-gray-500 text-sm">Welcome back, traveler</p>
+            <p className="text-gray-500 text-sm">
+              {isSignUp ? 'Create your account' : 'Welcome back, traveler'}
+            </p>
           </div>
           
           <div className="space-y-6">
-            {!showOtpInput ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                  <div className="flex">
-                    <div className="flex items-center px-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg">
-                      <span className="text-gray-600 text-sm">+91</span>
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="Enter 10-digit number"
-                      value={phoneNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        setPhoneNumber(value);
-                        setError('');
-                      }}
-                      className="flex-1 px-4 py-3 border border-gray-200 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      maxLength="10"
-                      disabled={loading}
-                    />
-                  </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="text-gray-400" size={20} />
                 </div>
-                
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
-                
-                <button
-                  onClick={handleSendOTP}
-                  disabled={loading || phoneNumber.length !== 10}
-                  className="w-full py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  style={{backgroundColor: '#eb3030'}}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Sending OTP...</span>
-                    </>
-                  ) : (
-                    <span>Send OTP</span>
-                  )}
-                </button>
-                
-                <p className="text-xs text-gray-500 text-center">
-                  You will receive a 6-digit OTP via SMS
-                </p>
-              </>
-            ) : (
-              <>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
-                    <button
-                      onClick={() => {
-                        setShowOtpInput(false);
-                        setOtp('');
-                        setError('');
-                      }}
-                      className="text-xs hover:underline"
-                      style={{color: '#eb3030'}}
-                    >
-                      Change Number
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      setOtp(value);
-                      setError('');
-                    }}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-center text-2xl tracking-widest"
-                    maxLength="6"
-                    disabled={loading}
-                  />
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    OTP sent to +91 {phoneNumber}
-                  </p>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError('');
+                  }}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="text-gray-400" size={20} />
                 </div>
-                
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
-                
-                <button
-                  onClick={handleVerifyOTP}
-                  disabled={loading || otp.length !== 6}
-                  className="w-full py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  style={{backgroundColor: '#eb3030'}}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Verifying...</span>
-                    </>
-                  ) : (
-                    <span>Verify & Login</span>
-                  )}
-                </button>
-                
-                <div className="text-center">
-                  <button
-                    onClick={handleSendOTP}
-                    disabled={loading}
-                    className="text-sm hover:underline disabled:opacity-50"
-                    style={{color: '#eb3030'}}
-                  >
-                    Resend OTP
-                  </button>
-                </div>
-              </>
+                <input
+                  type="password"
+                  placeholder={isSignUp ? "Create a password (min 6 characters)" : "Enter your password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && email && password.length >= 6) {
+                      handleSubmit();
+                    }
+                  }}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
             )}
+            
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !email || password.length < 6}
+              className="w-full py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              style={{backgroundColor: '#eb3030'}}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  <span>{isSignUp ? 'Creating Account...' : 'Logging in...'}</span>
+                </>
+              ) : (
+                <span>{isSignUp ? 'Create Account' : 'Login'}</span>
+              )}
+            </button>
+            
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setError('');
+                }}
+                className="text-sm hover:underline"
+                style={{color: '#eb3030'}}
+                disabled={loading}
+              >
+                {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign up"}
+              </button>
+            </div>
           </div>
-          
-          {/* reCAPTCHA container - invisible */}
-          <div id="recaptcha-container"></div>
         </div>
       </div>
     );
