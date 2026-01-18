@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, User, Phone, Car, FileText, Clock, CheckCircle, Ticket, LogOut, Loader2, Mail, Lock } from 'lucide-react';
 import { auth } from './firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -12,6 +12,7 @@ const App = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
 
   // Dummy data
   const bookingData = {
@@ -70,7 +71,15 @@ const App = () => {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        setError('Please verify your email before logging in. Check your inbox.');
+        setLoading(false);
+        return;
+      }
+      
       setIsLoggedIn(true);
       setLoading(false);
     } catch (err) {
@@ -94,9 +103,14 @@ const App = () => {
     setError('');
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      setIsLoggedIn(true);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+      
+      setVerificationSent(true);
       setLoading(false);
+      setError('');
     } catch (err) {
       setLoading(false);
       setError('Failed to create account. Email may already exist.');
@@ -120,6 +134,49 @@ const App = () => {
   };
 
   if (!isLoggedIn) {
+    // Show verification success message
+    if (verificationSent) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{backgroundColor: '#eb3030'}}>
+                <Mail className="text-white" size={32} />
+              </div>
+              <h1 className="text-3xl font-light text-gray-800 mb-2">Verify Your Email</h1>
+              <p className="text-gray-500 text-sm">We've sent you a verification link</p>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                <p className="font-medium mb-2">Account created successfully!</p>
+                <p>Please check your email inbox and click the verification link to activate your account.</p>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+                <p className="font-medium mb-2">📧 Check your email:</p>
+                <p className="mb-2">{email}</p>
+                <p className="text-xs">Didn't receive it? Check your spam folder.</p>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setVerificationSent(false);
+                  setIsSignUp(false);
+                  setEmail('');
+                  setPassword('');
+                }}
+                className="w-full py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 text-white"
+                style={{backgroundColor: '#eb3030'}}
+              >
+                Back to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
