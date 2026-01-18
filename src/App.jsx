@@ -1,15 +1,7 @@
-import React, { useState } from 'react'
-import {
-  Calendar,
-  MapPin,
-  User,
-  Phone,
-  Car,
-  Clock,
-  CheckCircle,
-  Ticket,
-  LogOut
-} from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, User, Phone, Car, FileText, Clock, CheckCircle, Ticket, LogOut, Loader2 } from 'lucide-react';
+import { auth } from './firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
