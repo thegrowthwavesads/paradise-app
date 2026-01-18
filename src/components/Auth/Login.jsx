@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebase';
+import { auth, db, ADMIN_EMAIL } from '../../firebase';
 import { MapPin, Mail, Lock, Loader2 } from 'lucide-react';
 
 const Login = () => {
